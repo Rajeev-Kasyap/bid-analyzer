@@ -56,7 +56,7 @@ st.markdown("""
     }
     
     .upload-section {
-        background: #f1f3f4;
+        background: darkblue;
         padding: 2rem;
         border-radius: 10px;
         text-align: center;
@@ -111,33 +111,7 @@ def display_document_stats(text):
     """Display document statistics"""
     word_count = len(text.split())
     char_count = len(text)
-    page_estimate = word_count // 250  # Rough estimate
-    
-    # col1, col2, col3 = st.columns(3)
-    
-    # with col1:
-    #     st.markdown("""
-    #     <div class="stats-card">
-    #         <h3>📄 Pages</h3>
-    #         <h2>{}</h2>
-    #     </div>
-    #     """.format(page_estimate), unsafe_allow_html=True)
-    
-    # with col2:
-    #     st.markdown("""
-    #     <div class="stats-card">
-    #         <h3>📝 Words</h3>
-    #         <h2>{:,}</h2>
-    #     </div>
-    #     """.format(word_count), unsafe_allow_html=True)
-    
-    # with col3:
-    #     st.markdown("""
-    #     <div class="stats-card">
-    #         <h3>🔤 Characters</h3>
-    #         <h2>{:,}</h2>
-    #     </div>
-    #     """.format(char_count), unsafe_allow_html=True)
+    page_estimate = word_count // 250  # Rough estimate    
 
 def main():
     # Header
