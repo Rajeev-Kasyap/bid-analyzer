@@ -273,7 +273,7 @@ def main():
                         f"Chunk {i+1}:\n{chunk}"
                     )
             
-            result = ask_llm(summary_prompt, [chunk])
+            result = ask_llm(summary_prompt, chunk)
             chunk_summaries.append(result)
             time.sleep(1.2)
             st.session_state.summary = "\n\n".join(chunk_summaries)
