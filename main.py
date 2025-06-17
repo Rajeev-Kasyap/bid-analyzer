@@ -73,6 +73,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+def split_text_into_chunks(text, chunk_size=4000, overlap=500):
+    """Splits text into overlapping chunks to stay within token limits."""
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start += chunk_size - overlap
+    return chunks
+
+
 def extract_text_from_pdf(pdf_file):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
     text = ""
@@ -227,22 +239,31 @@ def main():
             
             # Generate summary
             progress_bar.progress(75)
-            summary_prompt = (
-                "Analyze this bid document and provide the following information in a structured format:\n"
-                "1. **Tender Number:** \n"
-                "2. **Name of Work:** \n"
-                "3. **Department/Organization:** \n"
-                "4. **Estimated Contract Value:** \n"
-                "5. **Contract Period:** \n"
-                "6. **EMD (Earnest Money Deposit):** \n"
-                "7. **EMD Exemption:** \n"
-                "8. **Mode of Payment:** \n"
-                "9. **Key Eligibility Criteria:** \n"
-                "10. **Important Deadlines:** \n\n"
-                f"Document Content:\n{st.session_state.cleaned_text[:5000]}..."
-            )
+
+            chunks = split_text_into_chunks(st.session_state.cleaned_text, chunk_size=4000, overlap=500)
+            chunk_summaries = []
+
+            with st.spinner("🔍 Summarizing document in chunks..."):
+                for i, chunk in enumerate(chunks):
+                    summary_prompt = (
+                        "Analyze this bid document and provide the following information in a structured format:\n"
+                        "1. **Tender Number:** \n"
+                        "2. **Name of Work:** \n"
+                        "3. **Department/Organization:** \n"
+                        "4. **Estimated Contract Value:** \n"
+                        "5. **Contract Period:** \n"
+                        "6. **EMD (Earnest Money Deposit):** \n"
+                        "7. **EMD Exemption:** \n"
+                        "8. **Mode of Payment:** \n"
+                        "9. **Key Eligibility Criteria:** \n"
+                        "10. **Important Deadlines:** \n\n"
+                        "Return only relevant information found in this chunk.\n\n"
+                        f"Chunk {i+1}:\n{chunk}"
+                    )
             
-            st.session_state.summary = ask_llm(summary_prompt, st.session_state.cleaned_text)
+            result = ask_llm(summary_prompt, chunk)
+            chunk_summaries.append(result)
+            st.session_state.summary = "\n\n".join(chunk_summaries)
             progress_bar.progress(100)
             
         st.success("✅ Document processed successfully!")
