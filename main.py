@@ -8,8 +8,8 @@ from datetime import datetime
 
 # Load environment variables
 load_dotenv()
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Page configuration
 st.set_page_config(
@@ -85,7 +85,7 @@ def clean_text(text):
 
 def ask_llm(question, context):
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
@@ -96,12 +96,12 @@ def ask_llm(question, context):
     ]
 
     data = {
-        "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
+        "model": "llama-3.1-8b-instant",
         "messages": messages
     }
 
     try:
-        response = requests.post(OPENROUTER_API_URL, headers=headers, json=data)
+        response = requests.post(GROQ_API_URL, headers=headers, json=data)
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
     except Exception as e:
