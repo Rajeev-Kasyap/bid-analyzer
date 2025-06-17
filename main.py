@@ -96,7 +96,7 @@ def ask_llm(question, context):
     ]
 
     data = {
-        "model": "llama-3.1-8b-instant",
+        "model": "llama3-8b-8192",
         "messages": messages
     }
 
