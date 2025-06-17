@@ -4,6 +4,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import re
+import time
 from datetime import datetime
 
 # Load environment variables
@@ -111,6 +112,17 @@ def ask_llm(question, context):
         "model": "llama3-8b-8192",
         "messages": messages
     }
+
+    for attempt in range(3):
+        try:
+            response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=data)
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 429 and attempt < 2:
+                time.sleep(2)  # Wait and retry
+                continue
+            return f"Error: {e}"
 
     try:
         response = requests.post(GROQ_API_URL, headers=headers, json=data)
@@ -263,6 +275,7 @@ def main():
             
             result = ask_llm(summary_prompt, chunk)
             chunk_summaries.append(result)
+            time.sleep(1.2)
             st.session_state.summary = "\n\n".join(chunk_summaries)
             progress_bar.progress(100)
             
