@@ -273,7 +273,7 @@ def main():
                         f"Chunk {i+1}:\n{chunk}"
                     )
             
-            result = ask_llm(summary_prompt, chunk)
+            result = ask_llm(summary_prompt, [chunk])
             chunk_summaries.append(result)
             time.sleep(1.2)
             st.session_state.summary = "\n\n".join(chunk_summaries)
@@ -326,7 +326,22 @@ def main():
             st.session_state.last_question = user_question
             
             with st.spinner("Analyzing your question..."):
-                answer = ask_llm(user_question, st.session_state.cleaned_text)
+                # answer = ask_llm(user_question, st.session_state.cleaned_text)
+                chunks = split_text_into_chunks(st.session_state.cleaned_text, chunk_size=4000, overlap=500)
+                answers = []
+
+                with st.spinner("Scanning document in chunks..."):
+                    for i, chunk in enumerate(chunks):
+                        response = ask_llm(user_question, chunk)
+                        if not response.lower().startswith("error"):
+                            answers.append(response)
+                        time.sleep(1.2)
+
+                if answers:
+                    answer = "\n\n".join(answers)
+                else:
+                    answer = "No relevant information found in the document."
+
                 
                 # Display Q&A
                 st.markdown(f"""
