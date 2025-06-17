@@ -34,7 +34,7 @@ def ask_llm(question, context):
     ]
 
     data = {
-        "model": "deepseek-ai/deepseek-r1-0528-qwen3-8b",
+        "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
         "messages": messages
     }
 
