@@ -7,6 +7,13 @@ import re
 import time
 from datetime import datetime
 import json
+from googletrans import Translator, LANGUAGES
+from langdetect import detect, DetectorFactory
+import warnings
+
+# Set seed for consistent language detection
+DetectorFactory.seed = 0
+warnings.filterwarnings("ignore")
 
 # Load environment variables
 load_dotenv()
@@ -132,8 +139,122 @@ st.markdown("""
         margin: 1rem 0;
         border: 1px solid #ffcdd2;
     }
+    
+    .translation-card {
+        background: #e8f5e8;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #4caf50;
+        margin: 1rem 0;
+        border: 1px solid #c8e6c9;
+    }
+    
+    .translation-card h4 {
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+    }
+    
+    .translation-card p {
+        color: #1b5e20;
+        margin: 0.2rem 0;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+def detect_language(text):
+    """Detect the language of the text."""
+    try:
+        # Take a sample of text for detection (first 1000 characters)
+        sample_text = text[:1000].strip()
+        if len(sample_text) < 20:
+            return 'en'  # Default to English for very short texts
+        
+        detected_lang = detect(sample_text)
+        return detected_lang
+    except Exception as e:
+        st.warning(f"Language detection failed: {str(e)}. Defaulting to English.")
+        return 'en'
+
+def translate_text_in_chunks(text, target_lang='en', chunk_size=4000):
+    """Translate text in chunks to handle large documents."""
+    if not text or not text.strip():
+        return text, False
+    
+    # Detect source language
+    source_lang = detect_language(text)
+    
+    # If already in English, return as is
+    if source_lang == target_lang:
+        return text, False
+    
+    try:
+        translator = Translator()
+        
+        # Split text into chunks
+        chunks = []
+        current_chunk = ""
+        sentences = text.split('. ')
+        
+        for sentence in sentences:
+            if len(current_chunk + sentence) < chunk_size:
+                current_chunk += sentence + '. '
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = sentence + '. '
+        
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        
+        if not chunks:
+            chunks = [text]  # Fallback to original text
+        
+        translated_chunks = []
+        
+        # Create progress bar for translation
+        progress_bar = st.progress(0)
+        st.write(f"🌐 Translating from {LANGUAGES.get(source_lang, source_lang).title()} to English...")
+        
+        for i, chunk in enumerate(chunks):
+            try:
+                # Add retry logic for translation
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        translated = translator.translate(chunk, src=source_lang, dest=target_lang)
+                        translated_chunks.append(translated.text)
+                        break
+                    except Exception as retry_error:
+                        if attempt == max_retries - 1:
+                            st.warning(f"Translation failed for chunk {i+1}, using original text")
+                            translated_chunks.append(chunk)
+                        else:
+                            time.sleep(1)  # Wait before retry
+                
+                progress_bar.progress((i + 1) / len(chunks))
+                time.sleep(0.5)  # Rate limiting for free API
+                
+            except Exception as e:
+                st.warning(f"Error translating chunk {i+1}: {str(e)}")
+                translated_chunks.append(chunk)  # Use original text if translation fails
+        
+        translated_text = ' '.join(translated_chunks)
+        
+        # Display translation info
+        st.markdown(f"""
+        <div class="translation-card">
+            <h4>✅ Translation Completed</h4>
+            <p><strong>Source Language:</strong> {LANGUAGES.get(source_lang, source_lang).title()}</p>
+            <p><strong>Target Language:</strong> English</p>
+            <p><strong>Chunks Processed:</strong> {len(chunks)}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        return translated_text, True
+        
+    except Exception as e:
+        st.error(f"Translation failed: {str(e)}. Using original text.")
+        return text, False
 
 def split_text_into_chunks(text, chunk_size=3000, overlap=300):
     """Splits text into overlapping chunks to stay within token limits."""
@@ -468,14 +589,20 @@ def main():
     st.markdown("""
     <div class="main-header">
         <h1>📊 Bid Analyser Pro</h1>
-        <p>Advanced Document Analysis & Q&A System</p>
+        <p>Advanced Document Analysis & Q&A System with Translation</p>
     </div>
     """, unsafe_allow_html=True)
 
     # Sidebar
     with st.sidebar:
         st.header("🔧 Controls")
-    
+        
+        # Translation settings
+        # st.subheader("🌐 Translation Settings")
+        # auto_translate = st.checkbox("Auto-translate to English", value=True, help="Automatically detect and translate non-English documents")
+        
+        # if auto_translate:
+            # st.info("📝 Supported languages: All major languages including Hindi, Arabic, Spanish, French, German, Chinese, Japanese, etc.")
         
         # File upload section
         st.subheader("📁 Upload Document")
@@ -489,7 +616,7 @@ def main():
         st.subheader("⚡ Quick Actions")
         if st.button("🔄 Clear Analysis", use_container_width=True):
             keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", 
-                           "answer", "last_uploaded_file", "qa_history"]
+                           "answer", "last_uploaded_file", "qa_history", "translated_text", "was_translated"]
             for key in keys_to_clear:
                 st.session_state.pop(key, None)
             st.rerun()
@@ -518,7 +645,7 @@ def main():
     if st.session_state.get("last_uploaded_file") != uploaded_filename:
         st.session_state["last_uploaded_file"] = uploaded_filename
         # Clear old session state values
-        keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer"]
+        keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer", "translated_text", "was_translated"]
         for key in keys_to_clear:
             st.session_state.pop(key, None)
 
@@ -529,6 +656,7 @@ def main():
             <h2>📤 Upload Your Bid Document</h2>
             <p>Drag and drop a PDF or TXT file to get started with the analysis</p>
             <p><em>Supported formats: PDF, TXT • Max size: 200MB</em></p>
+            <p><strong>🌐 Multi-language support with free translation!</strong></p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -545,20 +673,20 @@ def main():
         
         with col2:
             st.markdown("""
+            ### 🌐 Translation Features
+            - Auto Language Detection
+            - Free Google Translate API
+            - 100+ Languages Supported
+            - Chunk-based Processing
+            """)
+        
+        with col3:
+            st.markdown("""
             ### 🤖 AI-Powered Analysis
             - Intelligent Q&A System
             - Document Summarization
             - Key Insights Extraction
             - Multi-chunk Processing
-            """)
-        
-        with col3:
-            st.markdown("""
-            ### 📊 Advanced Features
-            - Error Handling & Retries
-            - Rate Limit Management
-            - Progress Tracking
-            - Export Capabilities
             """)
 
     # Process the uploaded file
@@ -591,11 +719,23 @@ def main():
                     st.error("Document appears to be empty or too short for analysis.")
                     st.stop()
                 
-                st.session_state.cleaned_text = cleaned_text
+                # Translation step
+                progress_bar.progress(50)
+                if auto_translate:
+                    # st.subheader("🌐 Translation Process")
+                    translated_text, was_translated = translate_text_in_chunks(cleaned_text)
+                    st.session_state.translated_text = translated_text
+                    st.session_state.was_translated = was_translated
+                    final_text = translated_text
+                else:
+                    final_text = cleaned_text
+                    st.session_state.was_translated = False
+                
+                st.session_state.cleaned_text = final_text
                 
                 # Split into chunks
-                progress_bar.progress(60)
-                text_chunks = split_text_into_chunks(cleaned_text)
+                progress_bar.progress(70)
+                text_chunks = split_text_into_chunks(final_text)
                 st.session_state.text_chunks = text_chunks
                 
                 if not text_chunks:
@@ -617,6 +757,10 @@ def main():
 
     # Display results
     if "cleaned_text" in st.session_state:
+        # Translation info
+        if st.session_state.get("was_translated", False):
+            st.info("🌐 Document was automatically translated to English for better analysis.")
+        
         # Summary section
         st.subheader("📋 Document Analysis Summary")
         
@@ -694,27 +838,7 @@ def main():
                         <h4>💡 Answer:</h4>
                         <p>{formatted_answer}</p>
                     </div>
-                    """, unsafe_allow_html=True)
-
-        # Previous Q&A history
-        if st.session_state.qa_history:
-            with st.expander(f"📚 Q&A History ({len(st.session_state.qa_history)} questions)"):
-                for i, (q, a) in enumerate(reversed(st.session_state.qa_history[-10:])):  # Show last 10
-                    st.markdown(f"**Q{len(st.session_state.qa_history)-i}:** {q}")
-                    if a.startswith("Error"):
-                        st.error(f"**A:** {a}")
-                    else:
-                        st.markdown(f"**A:** {a}")
-                    st.markdown("---")
-
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: #666;">
-        <p>🚀 Bid Analyser Pro v2.0 - Enhanced with Better Error Handling</p>
-        <p><em>Intelligent Document Processing • Advanced Q&A System • Export Ready</em></p>
-    </div>
-    """, unsafe_allow_html=True)
+                    """, unsafe_allow_html = True)
 
 if __name__ == "__main__":
     main()
