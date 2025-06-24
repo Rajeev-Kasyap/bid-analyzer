@@ -7,13 +7,6 @@ import re
 import time
 from datetime import datetime
 import json
-from googletrans import Translator, LANGUAGES
-from langdetect import detect, DetectorFactory
-import warnings
-
-# Set seed for consistent language detection
-DetectorFactory.seed = 0
-warnings.filterwarnings("ignore")
 
 # Load environment variables
 load_dotenv()
@@ -25,236 +18,333 @@ st.set_page_config(
     page_title="Bid Analyser Pro",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
 )
+
+# Hide Streamlit branding and footer
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+.stApp > footer {visibility: hidden;}
+.stApp > header {visibility: hidden;}
+.main .block-container {padding-top: 0rem;}
+[data-testid="stToolbar"] {visibility: hidden;}
+.stDeployButton {visibility: hidden;}
+#stDecoration {display: none;}
+.reportview-container .main footer {visibility: hidden;}
+.stApp > div > div > div > div > section > div {padding-top: 0rem;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Custom CSS for better styling
 st.markdown("""
 <style>
-    .main-header {
-        text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+    /* Global styling */
+    .stApp {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+        color: #ffffff;
     }
     
+    .main .block-container {
+        background: transparent;
+        padding-top: 1rem;
+    }
+    
+    /* Main header */
+    .main-header {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+        color: white;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .main-header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .main-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        font-weight: 300;
+    }
+    
+    /* Summary card */
     .summary-card {
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 15px;
-        border-left: 5px solid #667eea;
-        margin: 1.5rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(30, 58, 138, 0.2);
+        margin: 2rem 0;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        backdrop-filter: blur(10px);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1e3a8a;
     }
     
     .summary-card h3 {
-        color: #667eea;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
+        color: #1e3a8a;
+        margin-bottom: 1.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        border-bottom: 2px solid #3b82f6;
+        padding-bottom: 0.5rem;
     }
     
     .summary-card h4 {
-        color: #333;
-        margin: 1rem 0 0.5rem 0;
-        font-size: 1.1rem;
+        color: #1e40af;
+        margin: 1.5rem 0 0.8rem 0;
+        font-size: 1.2rem;
         font-weight: 600;
     }
     
     .summary-card p, .summary-card li {
-        color: #555;
-        line-height: 1.6;
-        margin-bottom: 0.5rem;
+        color: #374151;
+        line-height: 1.7;
+        margin-bottom: 0.8rem;
+        font-size: 1rem;
     }
     
     .summary-card ul {
         padding-left: 1.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
     
+    .summary-card strong {
+        color: #1e3a8a;
+        font-weight: 600;
+    }
+    
+    /* Question card */
     .question-card {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.95);
         padding: 2rem;
         border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin: 1.5rem 0;
-        border-left: 5px solid #007bff;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        margin: 2rem 0;
+        border-left: 5px solid #3b82f6;
+        backdrop-filter: blur(10px);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     .question-card h4 {
-        color: #007bff;
+        color: black;
         margin-bottom: 1rem;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         font-weight: 600;
     }
     
     .question-card p {
-        color: #333;
+        color: #374151;
         line-height: 1.6;
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 500;
     }
+
+    /* Make input placeholder text black */
+    input::placeholder {
+        color: black !important;
+        opacity: 0.8;
+    }
+
     
+    /* Answer card */
     .answer-card {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.95);
         padding: 2rem;
         border-radius: 15px;
-        border-left: 5px solid #28a745;
-        margin: 1.5rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-left: 5px solid #10b981;
+        margin: 2rem 0;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        backdrop-filter: blur(10px);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     .answer-card h4 {
-        color: #28a745;
+        color: #059669;
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    .answer-card p {
+        color: #374151;
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+    
+    /* Upload section */
+    .upload-section {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        text-align: center;
+        margin: 2rem 0;
+        color: white;
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+    
+    .upload-section h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .upload-section p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+    
+    .upload-section em {
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+    
+    /* Error card */
+    .error-card {
+        background: rgba(239, 68, 68, 0.1);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border-left: 4px solid #ef4444;
+        margin: 1rem 0;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        backdrop-filter: blur(10px);
+        color: #dc2626;
+    }
+    
+    .error-card h4 {
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Feature cards */
+    .feature-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+    
+    .feature-card h3 {
+        color: #60a5fa;
         margin-bottom: 1rem;
         font-size: 1.2rem;
         font-weight: 600;
     }
     
-    .answer-card p {
-        color: #333;
-        line-height: 1.8;
-        font-size: 1rem;
+    .feature-card ul {
+        list-style: none;
+        padding-left: 0;
     }
     
-    .upload-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 10px;
-        text-align: center;
-        margin: 1rem 0;
-        color: white;
-    }
-    
-    .error-card {
-        background: #ffebee;
-        padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #f44336;
-        margin: 1rem 0;
-        border: 1px solid #ffcdd2;
-    }
-    
-    .translation-card {
-        background: #e8f5e8;
-        padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #4caf50;
-        margin: 1rem 0;
-        border: 1px solid #c8e6c9;
-    }
-    
-    .translation-card h4 {
-        color: #2e7d32;
+    .feature-card li {
         margin-bottom: 0.5rem;
+        padding-left: 1.5rem;
+        position: relative;
     }
     
-    .translation-card p {
-        color: #1b5e20;
-        margin: 0.2rem 0;
+    .feature-card li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #10b981;
+        font-weight: bold;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%) !important;
+    }
+    
+    .css-1d391kg .stMarkdown {
+        color: white !important;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+    
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+    
+    /* Progress bar */
+    .stProgress .st-bo {
+        background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+    }
+    
+    /* Text input styling */
+    .stTextInput > div > div > input {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        color: #1e3a8a;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white !important;
+    }
+    
+    /* Footer */
+    .footer-section {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        margin-top: 3rem;
+        color: white;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .footer-section p {
+        margin-bottom: 0.5rem;
+        opacity: 0.9;
+    }
+    
+    .footer-section em {
+        opacity: 0.7;
+        font-size: 0.9rem;
     }
 </style>
 """, unsafe_allow_html=True)
-
-def detect_language(text):
-    """Detect the language of the text."""
-    try:
-        # Take a sample of text for detection (first 1000 characters)
-        sample_text = text[:1000].strip()
-        if len(sample_text) < 20:
-            return 'en'  # Default to English for very short texts
-        
-        detected_lang = detect(sample_text)
-        return detected_lang
-    except Exception as e:
-        st.warning(f"Language detection failed: {str(e)}. Defaulting to English.")
-        return 'en'
-
-def translate_text_in_chunks(text, target_lang='en', chunk_size=4000):
-    """Translate text in chunks to handle large documents."""
-    if not text or not text.strip():
-        return text, False
-    
-    # Detect source language
-    source_lang = detect_language(text)
-    
-    # If already in English, return as is
-    if source_lang == target_lang:
-        return text, False
-    
-    try:
-        translator = Translator()
-        
-        # Split text into chunks
-        chunks = []
-        current_chunk = ""
-        sentences = text.split('. ')
-        
-        for sentence in sentences:
-            if len(current_chunk + sentence) < chunk_size:
-                current_chunk += sentence + '. '
-            else:
-                if current_chunk:
-                    chunks.append(current_chunk.strip())
-                current_chunk = sentence + '. '
-        
-        if current_chunk:
-            chunks.append(current_chunk.strip())
-        
-        if not chunks:
-            chunks = [text]  # Fallback to original text
-        
-        translated_chunks = []
-        
-        # Create progress bar for translation
-        progress_bar = st.progress(0)
-        st.write(f"🌐 Translating from {LANGUAGES.get(source_lang, source_lang).title()} to English...")
-        
-        for i, chunk in enumerate(chunks):
-            try:
-                # Add retry logic for translation
-                max_retries = 3
-                for attempt in range(max_retries):
-                    try:
-                        translated = translator.translate(chunk, src=source_lang, dest=target_lang)
-                        translated_chunks.append(translated.text)
-                        break
-                    except Exception as retry_error:
-                        if attempt == max_retries - 1:
-                            st.warning(f"Translation failed for chunk {i+1}, using original text")
-                            translated_chunks.append(chunk)
-                        else:
-                            time.sleep(1)  # Wait before retry
-                
-                progress_bar.progress((i + 1) / len(chunks))
-                time.sleep(0.5)  # Rate limiting for free API
-                
-            except Exception as e:
-                st.warning(f"Error translating chunk {i+1}: {str(e)}")
-                translated_chunks.append(chunk)  # Use original text if translation fails
-        
-        translated_text = ' '.join(translated_chunks)
-        
-        # Display translation info
-        st.markdown(f"""
-        <div class="translation-card">
-            <h4>✅ Translation Completed</h4>
-            <p><strong>Source Language:</strong> {LANGUAGES.get(source_lang, source_lang).title()}</p>
-            <p><strong>Target Language:</strong> English</p>
-            <p><strong>Chunks Processed:</strong> {len(chunks)}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        return translated_text, True
-        
-    except Exception as e:
-        st.error(f"Translation failed: {str(e)}. Using original text.")
-        return text, False
 
 def split_text_into_chunks(text, chunk_size=3000, overlap=300):
     """Splits text into overlapping chunks to stay within token limits."""
@@ -517,7 +607,7 @@ def generate_comprehensive_summary(text_chunks):
     
     # Combine and deduplicate information
     final_summary_prompt = f"""
-    Based on the following analysis sections from the same document, create a single comprehensive summary by combining and deduplicating the information:
+    Based on the following analysis sections from the same document, create a single comprehensive summary by combining and deduplicating the information
 
     {chr(10).join([f"Section {i+1}:\n{summary}\n" for i, summary in enumerate(all_summaries)])}
 
@@ -589,20 +679,14 @@ def main():
     st.markdown("""
     <div class="main-header">
         <h1>📊 Bid Analyser Pro</h1>
-        <p>Advanced Document Analysis & Q&A System with Translation</p>
+        <p>Advanced Document Analysis & Q&A System</p>
     </div>
     """, unsafe_allow_html=True)
 
     # Sidebar
     with st.sidebar:
         st.header("🔧 Controls")
-        
-        # Translation settings
-        # st.subheader("🌐 Translation Settings")
-        # auto_translate = st.checkbox("Auto-translate to English", value=True, help="Automatically detect and translate non-English documents")
-        
-        # if auto_translate:
-            # st.info("📝 Supported languages: All major languages including Hindi, Arabic, Spanish, French, German, Chinese, Japanese, etc.")
+    
         
         # File upload section
         st.subheader("📁 Upload Document")
@@ -616,7 +700,7 @@ def main():
         st.subheader("⚡ Quick Actions")
         if st.button("🔄 Clear Analysis", use_container_width=True):
             keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", 
-                           "answer", "last_uploaded_file", "qa_history", "translated_text", "was_translated"]
+                           "answer", "last_uploaded_file", "qa_history"]
             for key in keys_to_clear:
                 st.session_state.pop(key, None)
             st.rerun()
@@ -635,7 +719,7 @@ def main():
         ]
         
         for i, question in enumerate(sample_questions):
-            if st.button(f"❓ {question}", key=f"sample_{i}", use_container_width=True):
+            if st.button(f"{question}", key=f"sample_{i}", use_container_width=True):
                 st.session_state.user_question = question
 
     # Main content area
@@ -645,7 +729,7 @@ def main():
     if st.session_state.get("last_uploaded_file") != uploaded_filename:
         st.session_state["last_uploaded_file"] = uploaded_filename
         # Clear old session state values
-        keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer", "translated_text", "was_translated"]
+        keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer"]
         for key in keys_to_clear:
             st.session_state.pop(key, None)
 
@@ -656,7 +740,6 @@ def main():
             <h2>📤 Upload Your Bid Document</h2>
             <p>Drag and drop a PDF or TXT file to get started with the analysis</p>
             <p><em>Supported formats: PDF, TXT • Max size: 200MB</em></p>
-            <p><strong>🌐 Multi-language support with free translation!</strong></p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -673,20 +756,20 @@ def main():
         
         with col2:
             st.markdown("""
-            ### 🌐 Translation Features
-            - Auto Language Detection
-            - Free Google Translate API
-            - 100+ Languages Supported
-            - Chunk-based Processing
-            """)
-        
-        with col3:
-            st.markdown("""
             ### 🤖 AI-Powered Analysis
             - Intelligent Q&A System
             - Document Summarization
             - Key Insights Extraction
             - Multi-chunk Processing
+            """)
+        
+        with col3:
+            st.markdown("""
+            ### 📊 Advanced Features
+            - Error Handling & Retries
+            - Rate Limit Management
+            - Progress Tracking
+            - Export Capabilities
             """)
 
     # Process the uploaded file
@@ -719,23 +802,11 @@ def main():
                     st.error("Document appears to be empty or too short for analysis.")
                     st.stop()
                 
-                # Translation step
-                progress_bar.progress(50)
-                if auto_translate:
-                    # st.subheader("🌐 Translation Process")
-                    translated_text, was_translated = translate_text_in_chunks(cleaned_text)
-                    st.session_state.translated_text = translated_text
-                    st.session_state.was_translated = was_translated
-                    final_text = translated_text
-                else:
-                    final_text = cleaned_text
-                    st.session_state.was_translated = False
-                
-                st.session_state.cleaned_text = final_text
+                st.session_state.cleaned_text = cleaned_text
                 
                 # Split into chunks
-                progress_bar.progress(70)
-                text_chunks = split_text_into_chunks(final_text)
+                progress_bar.progress(60)
+                text_chunks = split_text_into_chunks(cleaned_text)
                 st.session_state.text_chunks = text_chunks
                 
                 if not text_chunks:
@@ -757,10 +828,6 @@ def main():
 
     # Display results
     if "cleaned_text" in st.session_state:
-        # Translation info
-        if st.session_state.get("was_translated", False):
-            st.info("🌐 Document was automatically translated to English for better analysis.")
-        
         # Summary section
         st.subheader("📋 Document Analysis Summary")
         
@@ -819,7 +886,7 @@ def main():
                 # Display Q&A
                 st.markdown(f"""
                 <div class="question-card">
-                    <h4>❓ Your Question:</h4>
+                    <h4>Your Question:</h4>
                     <p>{user_question}</p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -838,7 +905,27 @@ def main():
                         <h4>💡 Answer:</h4>
                         <p>{formatted_answer}</p>
                     </div>
-                    """, unsafe_allow_html = True)
+                    """, unsafe_allow_html=True)
+
+        # Previous Q&A history
+        if st.session_state.qa_history:
+            with st.expander(f"📚 Q&A History ({len(st.session_state.qa_history)} questions)"):
+                for i, (q, a) in enumerate(reversed(st.session_state.qa_history[-10:])):  # Show last 10
+                    st.markdown(f"**Q{len(st.session_state.qa_history)-i}:** {q}")
+                    if a.startswith("Error"):
+                        st.error(f"**A:** {a}")
+                    else:
+                        st.markdown(f"**A:** {a}")
+                    st.markdown("---")
+
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; padding: 2rem; color: black;">
+        <p>Bid Analyser Pro - Advanced Document Processing System</p>
+        <p><em>Intelligent Document Processing • Advanced Q&A System • Export Ready</em></p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
