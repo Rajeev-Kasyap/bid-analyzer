@@ -30,6 +30,13 @@ st.markdown("""
     .stToolbar {
         display: none !important;
     }
+    .stApp > div[data-testid="stToolbar"] {
+    display: none !important;
+    }
+
+    div[data-testid="stStatusWidget"] {
+        display: none !important;
+    }
     .stActionButton {
         display: none !important;
     }
