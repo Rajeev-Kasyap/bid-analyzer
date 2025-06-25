@@ -508,7 +508,7 @@ def main():
         ]
         
         for i, question in enumerate(sample_questions):
-            if st.button(f"❓ {question}", key=f"sample_{i}", use_container_width=True):
+            if st.button(f"{question}", key=f"sample_{i}", use_container_width=True):
                 st.session_state.user_question = question
 
     # Main content area
