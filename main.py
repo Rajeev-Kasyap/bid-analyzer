@@ -27,10 +27,26 @@ st.markdown("""
     .stDeployButton {
         display: none !important;
     }
+    .stToolbar {
+        display: none !important;
+    }
     .stActionButton {
         display: none !important;
     }
     footer {
+        display: none !important;
+    }
+    #MainMenu {
+        display: none !important;
+    }
+    header {
+        display: none !important;
+    }
+    .stApp > header {
+        display: none !important;
+    }
+    
+    .stApp > div:first-child {
         display: none !important;
     }
     .main-header {
