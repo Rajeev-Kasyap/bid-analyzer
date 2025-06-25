@@ -24,6 +24,15 @@ st.set_page_config(
 # Custom CSS for better styling
 st.markdown("""
 <style>
+    .stDeployButton {
+        display: none !important;
+    }
+    .stActionButton {
+        display: none !important;
+    }
+    footer {
+        display: none !important;
+    }
     .main-header {
         text-align: center;
         padding: 2rem 0;
