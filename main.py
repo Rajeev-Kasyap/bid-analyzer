@@ -18,330 +18,119 @@ st.set_page_config(
     page_title="Bid Analyser Pro",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None
-    }
+    initial_sidebar_state="expanded"
 )
-
-# Hide Streamlit branding and footer
-hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-.stApp > footer {visibility: hidden;}
-.stApp > header {visibility: hidden;}
-.main .block-container {padding-top: 0rem;}
-[data-testid="stToolbar"] {visibility: hidden;}
-.stDeployButton {visibility: hidden;}
-#stDecoration {display: none;}
-.reportview-container .main footer {visibility: hidden;}
-.stApp > div > div > div > div > section > div {padding-top: 0rem;}
-</style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Custom CSS for better styling
 st.markdown("""
 <style>
-    /* Global styling */
-    .stApp {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
-        color: #ffffff;
-    }
-    
-    .main .block-container {
-        background: transparent;
-        padding-top: 1rem;
-    }
-    
-    /* Main header */
     .main-header {
         text-align: center;
-        padding: 3rem 2rem;
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+        padding: 2rem 0;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border-radius: 20px;
+        border-radius: 10px;
         margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        border: 1px solid rgba(255,255,255,0.1);
     }
     
-    .main-header h1 {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .main-header p {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        font-weight: 300;
-    }
-    
-    /* Summary card */
     .summary-card {
-        background: rgba(255, 255, 255, 0.95);
-        padding: 2.5rem;
-        border-radius: 20px;
-        border: 1px solid rgba(30, 58, 138, 0.2);
-        margin: 2rem 0;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-        backdrop-filter: blur(10px);
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 15px;
+        border-left: 5px solid #667eea;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        color: #1e3a8a;
     }
     
     .summary-card h3 {
-        color: #1e3a8a;
-        margin-bottom: 1.5rem;
-        font-size: 1.4rem;
-        font-weight: 700;
-        border-bottom: 2px solid #3b82f6;
-        padding-bottom: 0.5rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
     }
     
     .summary-card h4 {
-        color: #1e40af;
-        margin: 1.5rem 0 0.8rem 0;
-        font-size: 1.2rem;
+        color: #333;
+        margin: 1rem 0 0.5rem 0;
+        font-size: 1.1rem;
         font-weight: 600;
     }
     
     .summary-card p, .summary-card li {
-        color: #374151;
-        line-height: 1.7;
-        margin-bottom: 0.8rem;
-        font-size: 1rem;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
     }
     
     .summary-card ul {
         padding-left: 1.5rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
-    .summary-card strong {
-        color: #1e3a8a;
-        font-weight: 600;
-    }
-    
-    /* Question card */
     .question-card {
-        background: rgba(255, 255, 255, 0.95);
+        background: #ffffff;
         padding: 2rem;
         border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        margin: 2rem 0;
-        border-left: 5px solid #3b82f6;
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin: 1.5rem 0;
+        border-left: 5px solid #007bff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
     .question-card h4 {
-        color: black;
-        margin-bottom: 1rem;
-        font-size: 1.3rem;
-        font-weight: 600;
-    }
-    
-    .question-card p {
-        color: #374151;
-        line-height: 1.6;
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-
-    /* Make input placeholder text black */
-    input::placeholder {
-        color: black !important;
-        opacity: 0.8;
-    }
-
-    
-    /* Answer card */
-    .answer-card {
-        background: rgba(255, 255, 255, 0.95);
-        padding: 2rem;
-        border-radius: 15px;
-        border-left: 5px solid #10b981;
-        margin: 2rem 0;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        backdrop-filter: blur(10px);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    .answer-card h4 {
-        color: #059669;
-        margin-bottom: 1rem;
-        font-size: 1.3rem;
-        font-weight: 600;
-    }
-    
-    .answer-card p {
-        color: #374151;
-        line-height: 1.8;
-        font-size: 1rem;
-    }
-    
-    /* Upload section */
-    .upload-section {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 3rem 2rem;
-        border-radius: 20px;
-        text-align: center;
-        margin: 2rem 0;
-        color: white;
-        border: 2px dashed rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-    }
-    
-    .upload-section h2 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-        font-weight: 600;
-    }
-    
-    .upload-section p {
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin-bottom: 0.5rem;
-    }
-    
-    .upload-section em {
-        opacity: 0.7;
-        font-size: 0.9rem;
-    }
-    
-    /* Error card */
-    .error-card {
-        background: rgba(239, 68, 68, 0.1);
-        padding: 1.5rem;
-        border-radius: 15px;
-        border-left: 4px solid #ef4444;
-        margin: 1rem 0;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        backdrop-filter: blur(10px);
-        color: #dc2626;
-    }
-    
-    .error-card h4 {
-        color: #dc2626;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Feature cards */
-    .feature-card {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 2rem;
-        border-radius: 15px;
-        margin: 1rem 0;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-    
-    .feature-card h3 {
-        color: #60a5fa;
+        color: #007bff;
         margin-bottom: 1rem;
         font-size: 1.2rem;
         font-weight: 600;
     }
     
-    .feature-card ul {
-        list-style: none;
-        padding-left: 0;
+    .question-card p {
+        color: #333;
+        line-height: 1.6;
+        font-size: 1rem;
+        font-weight: 500;
     }
     
-    .feature-card li {
-        margin-bottom: 0.5rem;
-        padding-left: 1.5rem;
-        position: relative;
-    }
-    
-    .feature-card li:before {
-        content: "✓";
-        position: absolute;
-        left: 0;
-        color: #10b981;
-        font-weight: bold;
-    }
-    
-    /* Sidebar styling */
-    .css-1d391kg {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%) !important;
-    }
-    
-    .css-1d391kg .stMarkdown {
-        color: white !important;
-    }
-    
-    /* Button styling */
-    .stButton > button {
-        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-    }
-    
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-    }
-    
-    /* Progress bar */
-    .stProgress .st-bo {
-        background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
-    }
-    
-    /* Text input styling */
-    .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.9);
-        border: 2px solid rgba(59, 130, 246, 0.3);
-        border-radius: 10px;
-        color: #1e3a8a;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        color: white !important;
-    }
-    
-    /* Footer */
-    .footer-section {
-        background: rgba(255, 255, 255, 0.1);
+    .answer-card {
+        background: #ffffff;
         padding: 2rem;
         border-radius: 15px;
+        border-left: 5px solid #28a745;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .answer-card h4 {
+        color: #28a745;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .answer-card p {
+        color: #333;
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+    
+    .upload-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 10px;
         text-align: center;
-        margin-top: 3rem;
+        margin: 1rem 0;
         color: white;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
-    .footer-section p {
-        margin-bottom: 0.5rem;
-        opacity: 0.9;
-    }
-    
-    .footer-section em {
-        opacity: 0.7;
-        font-size: 0.9rem;
+    .error-card {
+        background: #ffebee;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #f44336;
+        margin: 1rem 0;
+        border: 1px solid #ffcdd2;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -607,7 +396,7 @@ def generate_comprehensive_summary(text_chunks):
     
     # Combine and deduplicate information
     final_summary_prompt = f"""
-    Based on the following analysis sections from the same document, create a single comprehensive summary by combining and deduplicating the information
+    Based on the following analysis sections from the same document, create a single comprehensive summary by combining and deduplicating the information:
 
     {chr(10).join([f"Section {i+1}:\n{summary}\n" for i, summary in enumerate(all_summaries)])}
 
@@ -719,7 +508,7 @@ def main():
         ]
         
         for i, question in enumerate(sample_questions):
-            if st.button(f"{question}", key=f"sample_{i}", use_container_width=True):
+            if st.button(f"❓ {question}", key=f"sample_{i}", use_container_width=True):
                 st.session_state.user_question = question
 
     # Main content area
@@ -921,8 +710,8 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: black;">
-        <p>Bid Analyser Pro - Advanced Document Processing System</p>
+    <div style="text-align: center; padding: 2rem; color: #666;">
+        <p>🚀 Bid Analyser Pro v2.0 - Enhanced with Better Error Handling</p>
         <p><em>Intelligent Document Processing • Advanced Q&A System • Export Ready</em></p>
     </div>
     """, unsafe_allow_html=True)
