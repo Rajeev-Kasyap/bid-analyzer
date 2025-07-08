@@ -7,6 +7,7 @@ import re
 import time
 from datetime import datetime
 import json
+import streamlit.components.v1 as components
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +22,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
+# Custom CSS for better styling and the custom sidebar toggle button
 st.markdown("""
 <style>
     .stDeployButton {
@@ -30,9 +31,7 @@ st.markdown("""
     .stToolbar {
         display: none !important;
     }
-    .stApp > div[data-testid="stToolbar"] {
-    display: none !important;
-    }
+
 
     div[data-testid="stStatusWidget"] {
         display: none !important;
@@ -46,16 +45,14 @@ st.markdown("""
     #MainMenu {
         display: none !important;
     }
-    header {
+    /* DO NOT hide header or .stApp > header, as this can break sidebar toggle */
+    /* header {
         display: none !important;
     }
     .stApp > header {
         display: none !important;
-    }
+    } */
     
-    .stApp > div:first-child {
-        display: none !important;
-    }
     .main-header {
         text-align: center;
         padding: 2rem 0;
@@ -164,8 +161,38 @@ st.markdown("""
         margin: 1rem 0;
         border: 1px solid #ffcdd2;
     }
+
+    /* Custom button to reopen the sidebar */
+    #mainSidebarToggleBtn {
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        z-index: 10010;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 14px 8px 10px;
+        font-size: 1.1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        box-shadow: 0 2px 8px rgba(102,126,234,0.18);
+        cursor: pointer;
+        /* Hidden by default, script will show it */
+        display: none;
+        align-items: center;
+        gap: 6px;
+        opacity: 0.97;
+        transition: left 0.2s;
+    }
+    #mainSidebarToggleBtn svg {
+        vertical-align: middle;
+        margin-right: 4px;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+
+## Removed floating sidebar toggle button and its message as requested
 
 def split_text_into_chunks(text, chunk_size=3000, overlap=300):
     """Splits text into overlapping chunks to stay within token limits."""
