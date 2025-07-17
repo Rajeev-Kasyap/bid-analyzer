@@ -59,19 +59,9 @@ st.markdown("""
         border-radius: 10px; text-align: center; margin: 1rem 0; color: white;
     }
     .error-card {
-<<<<<<< HEAD
         background: #ffebee; padding: 1.5rem; border-radius: 10px;
         border-left: 4px solid #f44336; margin: 1rem 0; border: 1px solid #ffcdd2;
     }
-=======
-        background: #ffebee;
-        padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #f44336;
-        margin: 1rem 0;
-        border: 1px solid #ffcdd2;
-    }   
->>>>>>> 38f80fb655fb000d3a544a51d676a00aa4adb0ae
 </style>
 """, unsafe_allow_html=True)
 
@@ -312,11 +302,8 @@ def main():
         st.subheader("📁 Upload Document")
         uploaded_file = st.file_uploader("Choose a PDF or TXT file", type=["pdf", "txt"], help="Upload your bid document for analysis")
         
-<<<<<<< HEAD
         st.subheader("⚡ Quick Actions")
-=======
-        st.subheader(" Quick Actions")
->>>>>>> 38f80fb655fb000d3a544a51d676a00aa4adb0ae
+
         if st.button("🔄 Clear Analysis", use_container_width=True):
             keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer", "last_uploaded_file", "qa_history", "translated_text", "translated_lang"]
             for key in keys_to_clear:
