@@ -398,8 +398,33 @@ def main():
             st.subheader(f"✅ Translated Summary ({st.session_state.translated_lang})")
             st.markdown(f"""<style>.translated-card {{ border-left: 5px solid #28a745; }}</style><div class="summary-card translated-card"><p>{st.session_state.translated_text.replace(chr(10), '<br>')}</p></div>""", unsafe_allow_html=True)
         
-        if st.button("📥 Download Summary", use_container_width=True):
-            st.download_button("💾 Download as Text File", st.session_state.summary, f"bid_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "text/plain", use_container_width=True)
+        # --- NEW DYNAMIC DOWNLOAD SECTION ---
+        st.subheader("⬇️ Download Summaries")
+        
+        # Create a layout with two columns for the buttons
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Always show the button to download the original English summary
+            st.download_button(
+                label="📥 Download Original (English)",
+                data=st.session_state.summary,
+                file_name=f"bid_analysis_english_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+
+        with col2:
+            # If a translated summary exists, show a button for it as well
+            if "translated_text" in st.session_state and st.session_state.translated_text:
+                st.download_button(
+                    label=f"📥 Download Translated ({st.session_state.translated_lang})",
+                    data=st.session_state.translated_text,
+                    file_name=f"bid_analysis_{st.session_state.translated_lang.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+        # --- END OF NEW SECTION ---
         
         st.subheader("🔍 Ask Questions About the Document")
         col1, col2 = st.columns([4, 1])
