@@ -303,7 +303,6 @@ def main():
         uploaded_file = st.file_uploader("Choose a PDF or TXT file", type=["pdf", "txt"], help="Upload your bid document for analysis")
         
         st.subheader("⚡ Quick Actions")
-
         if st.button("🔄 Clear Analysis", use_container_width=True):
             keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer", "last_uploaded_file", "qa_history", "translated_text", "translated_lang"]
             for key in keys_to_clear:
@@ -314,17 +313,38 @@ def main():
         if "summary" in st.session_state and st.session_state.summary and not st.session_state.summary.startswith("Error"):
             st.subheader("🗣️ Translate Summary")
 
-            INDIAN_LANGUAGES = {
-                "Hindi": "Hindi", "Bengali": "Bengali", "Telugu": "Telugu", "Marathi": "Marathi", "Tamil": "Tamil",
-                "Urdu": "Urdu", "Gujarati": "Gujarati", "Kannada": "Kannada", "Odia": "Odia", "Punjabi": "Punjabi", "Malayalam": "Malayalam",
+            # --- MODIFIED: EXPANDED DICTIONARY OF LANGUAGES ---
+            LANGUAGES = {
+                # Indian Languages
+                "Hindi": "Hindi",
+                "Bengali": "Bengali",
+                "Telugu": "Telugu",
+                "Marathi": "Marathi",
+                "Tamil": "Tamil",
+                "Kannada": "Kannada",
+                "Malayalam": "Malayalam",
+                "Punjabi": "Punjabi",
+                "Gujarati": "Gujarati",
+                # World Languages
+                "Spanish": "Spanish",
+                "French": "French",
+                "German": "German",
+                "Mandarin Chinese": "Mandarin Chinese",
+                "Japanese": "Japanese",
+                "Russian": "Russian",
+                "Arabic": "Arabic",
+                "Portuguese": "Portuguese",
             }
 
-            selected_language = st.selectbox("Select a language:", options=list(INDIAN_LANGUAGES.keys()))
+            selected_language = st.selectbox(
+                "Select a language:",
+                options=list(LANGUAGES.keys())
+            )
 
             if st.button("Translate", use_container_width=True, type="primary"):
                 if selected_language:
                     with st.spinner(f"Translating to {selected_language}..."):
-                        formal_language_name = INDIAN_LANGUAGES[selected_language]
+                        formal_language_name = LANGUAGES[selected_language]
                         translated_text = translate_text_with_llm(st.session_state.summary, formal_language_name)
                         st.session_state.translated_text = translated_text
                         st.session_state.translated_lang = selected_language
@@ -399,14 +419,9 @@ def main():
             st.subheader(f"✅ Translated Summary ({st.session_state.translated_lang})")
             st.markdown(f"""<style>.translated-card {{ border-left: 5px solid #28a745; }}</style><div class="summary-card translated-card"><p>{st.session_state.translated_text.replace(chr(10), '<br>')}</p></div>""", unsafe_allow_html=True)
         
-        # --- NEW DYNAMIC DOWNLOAD SECTION ---
         st.subheader("⬇️ Download Summaries")
-        
-        # Create a layout with two columns for the buttons
         col1, col2 = st.columns(2)
-
         with col1:
-            # Always show the button to download the original English summary
             st.download_button(
                 label="📥 Download Original (English)",
                 data=st.session_state.summary,
@@ -414,24 +429,20 @@ def main():
                 mime="text/plain",
                 use_container_width=True
             )
-
         with col2:
-            # If a translated summary exists, show a button for it as well
             if "translated_text" in st.session_state and st.session_state.translated_text:
                 st.download_button(
                     label=f"📥 Download Translated ({st.session_state.translated_lang})",
                     data=st.session_state.translated_text,
-                    file_name=f"bid_analysis_{st.session_state.translated_lang.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    file_name=f"bid_analysis_{st.session_state.translated_lang.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
                     mime="text/plain",
                     use_container_width=True
                 )
-        # --- END OF NEW SECTION ---
         
         st.subheader("🔍 Ask Questions About the Document")
         col1, col2 = st.columns([4, 1])
         user_question = col1.text_input("Type your question here:", value=st.session_state.get("user_question", ""), placeholder="e.g., What is the tender submission deadline?", key="question_input")
         ask_button = col2.button("🔍 Ask", use_container_width=True, type="primary")
-
 
         if (ask_button and user_question) or (user_question and user_question != st.session_state.get("last_question", "")):
             st.session_state.last_question = user_question
