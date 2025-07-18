@@ -22,150 +22,49 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling and the custom sidebar toggle button
+# Custom CSS for better styling
 st.markdown("""
 <style>
-    .stDeployButton {
+    .stDeployButton, .stToolbar, div[data-testid="stStatusWidget"], .stActionButton, footer, #MainMenu {
         display: none !important;
     }
-    .stToolbar {
-        display: none !important;
-    }
-
-
-    div[data-testid="stStatusWidget"] {
-        display: none !important;
-    }
-    .stActionButton {
-        display: none !important;
-    }
-    footer {
-        display: none !important;
-    }
-    #MainMenu {
-        display: none !important;
-    }
-    /* DO NOT hide header or .stApp > header, as this can break sidebar toggle */
-    /* header {
-        display: none !important;
-    }
-    .stApp > header {
-        display: none !important;
-    } */
-    
     .main-header {
-        text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+        text-align: center; padding: 2rem 0; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: white; border-radius: 10px; margin-bottom: 2rem;
     }
-    
     .summary-card {
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 15px;
-        border-left: 5px solid #667eea;
-        margin: 1.5rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #ffffff; padding: 2rem; border-radius: 15px; border-left: 5px solid #667eea;
+        margin: 1.5rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    .summary-card h3 {
-        color: #667eea;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
-    
     .summary-card h4 {
-        color: #333;
-        margin: 1rem 0 0.5rem 0;
-        font-size: 1.1rem;
-        font-weight: 600;
+        color: #333; margin: 1rem 0 0.5rem 0; font-size: 1.1rem; font-weight: 600;
     }
-    
     .summary-card p, .summary-card li {
-        color: #555;
-        line-height: 1.6;
-        margin-bottom: 0.5rem;
+        color: #555; line-height: 1.6; margin-bottom: 0.5rem;
     }
-    
     .summary-card ul {
-        padding-left: 1.5rem;
-        margin-bottom: 1rem;
+        padding-left: 1.5rem; margin-bottom: 1rem;
     }
-    
-    .question-card {
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin: 1.5rem 0;
-        border-left: 5px solid #007bff;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    .question-card, .answer-card {
+        background: #ffffff; padding: 2rem; border-radius: 15px; margin: 1.5rem 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    .question-card h4 {
-        color: #007bff;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
-    
-    .question-card p {
-        color: #333;
-        line-height: 1.6;
-        font-size: 1rem;
-        font-weight: 500;
-    }
-    
-    .answer-card {
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 15px;
-        border-left: 5px solid #28a745;
-        margin: 1.5rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    .answer-card h4 {
-        color: #28a745;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
-    
-    .answer-card p {
-        color: #333;
-        line-height: 1.8;
-        font-size: 1rem;
-    }
-    
+    .question-card { border-left: 5px solid #007bff; }
+    .answer-card { border-left: 5px solid #28a745; }
+    .question-card h4 { color: #007bff; }
+    .answer-card h4 { color: #28a745; }
+    .question-card p, .answer-card p { color: #333; line-height: 1.6; }
     .upload-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 10px;
-        text-align: center;
-        margin: 1rem 0;
-        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;
+        border-radius: 10px; text-align: center; margin: 1rem 0; color: white;
     }
-    
     .error-card {
-        background: #ffebee;
-        padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #f44336;
-        margin: 1rem 0;
-        border: 1px solid #ffcdd2;
-    }   
+        background: #ffebee; padding: 1.5rem; border-radius: 10px;
+        border-left: 4px solid #f44336; margin: 1rem 0; border: 1px solid #ffcdd2;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-
-## Removed floating sidebar toggle button and its message as requested
 
 def split_text_into_chunks(text, chunk_size=3000, overlap=300):
     if not text or len(text.strip()) == 0:
@@ -403,7 +302,7 @@ def main():
         st.subheader("📁 Upload Document")
         uploaded_file = st.file_uploader("Choose a PDF or TXT file", type=["pdf", "txt"], help="Upload your bid document for analysis")
         
-        st.subheader(" Quick Actions")
+        st.subheader("⚡ Quick Actions")
         if st.button("🔄 Clear Analysis", use_container_width=True):
             keys_to_clear = ["summary", "cleaned_text", "text_chunks", "user_question", "answer", "last_uploaded_file", "qa_history", "translated_text", "translated_lang"]
             for key in keys_to_clear:
@@ -414,17 +313,38 @@ def main():
         if "summary" in st.session_state and st.session_state.summary and not st.session_state.summary.startswith("Error"):
             st.subheader("🗣️ Translate Summary")
 
-            INDIAN_LANGUAGES = {
-                "Hindi": "Hindi", "Bengali": "Bengali", "Telugu": "Telugu", "Marathi": "Marathi", "Tamil": "Tamil",
-                "Urdu": "Urdu", "Gujarati": "Gujarati", "Kannada": "Kannada", "Odia": "Odia", "Punjabi": "Punjabi", "Malayalam": "Malayalam",
+            # --- MODIFIED: EXPANDED DICTIONARY OF LANGUAGES ---
+            LANGUAGES = {
+                # Indian Languages
+                "Hindi": "Hindi",
+                "Bengali": "Bengali",
+                "Telugu": "Telugu",
+                "Marathi": "Marathi",
+                "Tamil": "Tamil",
+                "Kannada": "Kannada",
+                "Malayalam": "Malayalam",
+                "Punjabi": "Punjabi",
+                "Gujarati": "Gujarati",
+                # World Languages
+                "Spanish": "Spanish",
+                "French": "French",
+                "German": "German",
+                "Mandarin Chinese": "Mandarin Chinese",
+                "Japanese": "Japanese",
+                "Russian": "Russian",
+                "Arabic": "Arabic",
+                "Portuguese": "Portuguese",
             }
 
-            selected_language = st.selectbox("Select a language:", options=list(INDIAN_LANGUAGES.keys()))
+            selected_language = st.selectbox(
+                "Select a language:",
+                options=list(LANGUAGES.keys())
+            )
 
             if st.button("Translate", use_container_width=True, type="primary"):
                 if selected_language:
                     with st.spinner(f"Translating to {selected_language}..."):
-                        formal_language_name = INDIAN_LANGUAGES[selected_language]
+                        formal_language_name = LANGUAGES[selected_language]
                         translated_text = translate_text_with_llm(st.session_state.summary, formal_language_name)
                         st.session_state.translated_text = translated_text
                         st.session_state.translated_lang = selected_language
@@ -499,8 +419,25 @@ def main():
             st.subheader(f"✅ Translated Summary ({st.session_state.translated_lang})")
             st.markdown(f"""<style>.translated-card {{ border-left: 5px solid #28a745; }}</style><div class="summary-card translated-card"><p>{st.session_state.translated_text.replace(chr(10), '<br>')}</p></div>""", unsafe_allow_html=True)
         
-        if st.button("📥 Download Summary", use_container_width=True):
-            st.download_button("💾 Download as Text File", st.session_state.summary, f"bid_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", "text/plain", use_container_width=True)
+        st.subheader("⬇️ Download Summaries")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                label="📥 Download Original (English)",
+                data=st.session_state.summary,
+                file_name=f"bid_analysis_english_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+        with col2:
+            if "translated_text" in st.session_state and st.session_state.translated_text:
+                st.download_button(
+                    label=f"📥 Download Translated ({st.session_state.translated_lang})",
+                    data=st.session_state.translated_text,
+                    file_name=f"bid_analysis_{st.session_state.translated_lang.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
         
         st.subheader("🔍 Ask Questions About the Document")
         col1, col2 = st.columns([4, 1])
